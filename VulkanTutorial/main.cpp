@@ -18,6 +18,16 @@
 class HelloTriangleApplication {
     const uint32_t WIDTH = 800;
     const uint32_t HEIGHT = 600;
+    
+    const std::vector<const char*> validationLayers = {
+        "VK_LAYER_KHRONOS_validation"
+    };
+    
+#ifdef NDEBUG
+    const bool enableValidationLayers = false;
+#else
+    const bool enableValidationLayers = true;
+#endif
 public:
     void run() {
         initWindow();
@@ -43,7 +53,39 @@ private:
         createInstance();
     }
     
+    bool checkValidationLayerSupport() {
+        //Vulkan内で有効なバリデーションレイヤーを全探索
+        uint32_t layerCount;
+        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+        
+        std::vector<VkLayerProperties> availableLayers(layerCount);
+        vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+        
+        //このアプリケーションの要求するレイヤーを兼ね備えているかチェック
+        for(const char* layerName : validationLayers) {
+            bool layerFound = false;
+            
+            for(const auto& layerProperties : availableLayers) {
+                if(strcmp(layerName, layerProperties.layerName) == 0) {
+                    layerFound = true;
+                    break;
+                }
+            }
+            
+            if(!layerFound) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
     void createInstance() {
+        //バリデーションレイヤーに対応しているかどうかの確認
+        if(enableValidationLayers && !checkValidationLayerSupport()){
+            throw std::runtime_error("validation layers requested, but not available!");
+        }
+        
         //アプリケーション情報を定める構造体
         VkApplicationInfo appInfo{};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -73,7 +115,12 @@ private:
         createInfo.enabledExtensionCount = (uint32_t)requiredExtensions.size();
         createInfo.ppEnabledExtensionNames = requiredExtensions.data();
         
-        createInfo.enabledLayerCount = 0;
+        if(enableValidationLayers) {
+            createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+            createInfo.ppEnabledLayerNames = validationLayers.data();
+        } else {
+            createInfo.enabledLayerCount = 0;
+        }
         
         if(vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
             throw std::runtime_error("failed to create instance!");
@@ -87,6 +134,8 @@ private:
     }
     
     void cleanup() {
+        vkDestroyInstance(instance, nullptr);
+        
         glfwDestroyWindow(window);
         
         glfwTerminate();
