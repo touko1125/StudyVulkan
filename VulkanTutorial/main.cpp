@@ -5,10 +5,42 @@
 //  Created by 島田東子 on 2023/02/25.
 //
 
+#include <vulkan/vulkan.h>
+
 #include <iostream>
+#include <stdexcept>
+#include <cstdlib>
+
+class HelloTriangleApplication {
+public:
+    void run() {
+        initVulkan();
+        mainLoop();
+        cleanup();
+    }
+private:
+    void initVulkan() {
+        
+    }
+    
+    void mainLoop() {
+        
+    }
+    
+    void cleanup() {
+        
+    }
+};
 
 int main(int argc, const char * argv[]) {
-    // insert code here...
-    std::cout << "Hello, World!\n";
-    return 0;
+    HelloTriangleApplication app;
+    
+    try{
+        app.run();
+    }catch(const std::exception& error){
+        std::cerr << error.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+    
+    return EXIT_SUCCESS;
 }
